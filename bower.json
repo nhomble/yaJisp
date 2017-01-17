@@ -1,0 +1,22 @@
+{
+  "name": "yaJisp",
+  "description": "yet another javascript lisp interpreter",
+  "main": "./app/app.js",
+  "authors": [
+    "NH"
+  ],
+  "license": "GNU",
+  "keywords": [
+    "lisp",
+    "interpreter"
+  ],
+  "homepage": "https://github.com/nhomble/yaJisp",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
