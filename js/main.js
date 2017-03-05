@@ -19,6 +19,9 @@
             },
             sum: function(args){
                 return args.reduce(function(acc, val){ return acc + parseInt(val); }, 0);
+            },
+            product: function(args){
+                return args.reduce(function(acc, val){ return acc * parseInt(val); }, 1);
             }
         },
         get: function (variable) {
