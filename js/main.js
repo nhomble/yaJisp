@@ -16,6 +16,9 @@
             },
             last: function (args) {
                 return args.slice(-1)[0];
+            },
+            sum: function(args){
+                return args.reduce(function(acc, val){ return acc + parseInt(val); }, 0);
             }
         },
         get: function (variable) {
