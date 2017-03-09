@@ -9,19 +9,31 @@
     var STD_LIB = {
         scope: {
             first: function (args) {
-                return args[0];
+                return args[0][0];
             },
             second: function (args) {
-                return (args.length > 1) ? args[1] : null;
+                return (args[0].length > 1) ? args[0][1] : null;
             },
             last: function (args) {
-                return args.slice(-1)[0];
+                return args[0].slice(-1)[0];
             },
             sum: function(args){
-                return args.reduce(function(acc, val){ return acc + parseInt(val); }, 0);
+                return args[0].reduce(function(acc, val){ return acc + parseInt(val); }, 0);
             },
             product: function(args){
-                return args.reduce(function(acc, val){ return acc * parseInt(val); }, 1);
+                return args[0].reduce(function(acc, val){ return acc * parseInt(val); }, 1);
+            },
+            "+": function(args){
+                return parseInt(args[0]) + parseInt(args[1]);
+            },
+            "-": function(args){
+                return parseInt(args[0]) - parseInt(args[1]);
+            },
+            "*": function(args){
+                return parseInt(args[0]) * parseInt(args[1]);
+            },
+            "/": function(args){
+                return parseFloat(args[0]) / parseFloat(args[1]);
             }
         },
         get: function (variable) {
@@ -154,7 +166,7 @@
                     return {
                         type: TOKEN_TYPE.FUNC,
                         val: function (args) {
-                            return memory.get(node.val).apply(null, args);
+                            return memory.get(node.val).call(null, args);
                         }
                     };
                 else
