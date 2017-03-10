@@ -9,31 +9,47 @@
     var STD_LIB = {
         scope: {
             first: function (args) {
-                return args[0][0];
+                return args[0].val[0].val;
             },
             second: function (args) {
-                return (args[0].length > 1) ? args[0][1] : null;
+                return (args[0].val.length > 1) ? args[0].val[1].val : null;
             },
             last: function (args) {
-                return args[0].slice(-1)[0];
+                return args[0].val.slice(-1)[0].val;
             },
             sum: function(args){
-                return args[0].reduce(function(acc, val){ return acc + parseInt(val); }, 0);
+                return args[0].val.reduce(function(acc, val){ return acc + parseInt(val); }, 0);
             },
             product: function(args){
-                return args[0].reduce(function(acc, val){ return acc * parseInt(val); }, 1);
+                return args[0].val.reduce(function(acc, val){ return acc * parseInt(val); }, 1);
             },
             "+": function(args){
-                return parseInt(args[0]) + parseInt(args[1]);
+                return parseInt(args[0].val) + parseInt(args[1].val);
             },
             "-": function(args){
-                return parseInt(args[0]) - parseInt(args[1]);
+                return parseInt(args[0].val) - parseInt(args[1].val);
             },
             "*": function(args){
-                return parseInt(args[0]) * parseInt(args[1]);
+                return parseInt(args[0].val) * parseInt(args[1].val);
             },
             "/": function(args){
-                return parseFloat(args[0]) / parseFloat(args[1]);
+                return parseFloat(args[0].val) / parseFloat(args[1].val);
+            },
+            ">": function(args){
+                return args[0].val > args[1].val;
+            },
+            "<": function(args){
+                return args[0].val < args[1].val;
+            },
+            "<=": function(args){
+                return args[0].val <= args[1].val;
+            },
+            ">=": function(args){
+                return args[0].val >= args[1].val;
+            },
+            define: function(args){
+                this.REPL_STATE.scope[args[0].name] = args[1].val;
+                return args[1].val;
             }
         },
         get: function (variable) {
@@ -128,8 +144,11 @@
     // we only need to discern vars from symbols, funcs are determined based on the clojure
     function identify(token) {
         var token_type;
-        if (isNumeric(token) || isString(token))
+        if (isNumeric(token) || isString(token)) {
             token_type = TOKEN_TYPE.SYMBOL;
+            if(isNumeric(token))
+                token = parseFloat(token);
+        }
         else
             token_type = TOKEN_TYPE.VAR;
         return {
@@ -143,7 +162,7 @@
         interpret: function (line) {
             var tokens = tokenize(line);
             var ast = parse(tokens);
-            return this.eval(ast);
+            return this.eval(ast).val;
         },
         eval: function (ast) {
             var evalList = function (interpreter, ast, memory) {
@@ -166,21 +185,31 @@
                     return {
                         type: TOKEN_TYPE.FUNC,
                         val: function (args) {
-                            return memory.get(node.val).call(null, args);
+                            return memory.get(node.val).call(interpreter, args);
                         }
                     };
                 else
-                    return memory.get(node.val); // or just get the var value
+                    return {
+                        type: TOKEN_TYPE.VAR,
+                        name: node.val,
+                        val: memory.get(node.val)
+                    };
             };
             var evalHelper = function (interpreter, node, memory) {
                 if (node instanceof Array) {
-                    return evalList(interpreter, node, memory);
+                    return {
+                        type: TOKEN_TYPE.SYMBOL,
+                        val: evalList(interpreter, node, memory)
+                    };
                 }
                 else if (node.type == TOKEN_TYPE.VAR) {
                     return evalVar(interpreter, node, memory);
                 }
                 else if (node.type == TOKEN_TYPE.SYMBOL) {
-                    return node.val;
+                    return {
+                        type: TOKEN_TYPE.SYMBOL,
+                        val: node.val
+                    };
                 }
                 else
                     alert("WE FELL OUT OF THE BLOCK????? HOW????? " + node.type);
