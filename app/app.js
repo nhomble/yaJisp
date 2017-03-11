@@ -17,39 +17,39 @@
             last: function (args) {
                 return args[0].val.slice(-1)[0].val;
             },
-            sum: function(args){
-                return args[0].val.reduce(function(acc, val){ return acc + parseInt(val); }, 0);
+            sum: function (args) {
+                return args[0].val.reduce(function (acc, val) {
+                    return acc + parseInt(val);
+                }, 0);
             },
-            product: function(args){
-                return args[0].val.reduce(function(acc, val){ return acc * parseInt(val); }, 1);
+            product: function (args) {
+                return args[0].val.reduce(function (acc, val) {
+                    return acc * parseInt(val);
+                }, 1);
             },
-            "+": function(args){
+            "+": function (args) {
                 return parseInt(args[0].val) + parseInt(args[1].val);
             },
-            "-": function(args){
+            "-": function (args) {
                 return parseInt(args[0].val) - parseInt(args[1].val);
             },
-            "*": function(args){
+            "*": function (args) {
                 return parseInt(args[0].val) * parseInt(args[1].val);
             },
-            "/": function(args){
+            "/": function (args) {
                 return parseFloat(args[0].val) / parseFloat(args[1].val);
             },
-            ">": function(args){
+            ">": function (args) {
                 return args[0].val > args[1].val;
             },
-            "<": function(args){
+            "<": function (args) {
                 return args[0].val < args[1].val;
             },
-            "<=": function(args){
+            "<=": function (args) {
                 return args[0].val <= args[1].val;
             },
-            ">=": function(args){
+            ">=": function (args) {
                 return args[0].val >= args[1].val;
-            },
-            define: function(args){
-                this.REPL_STATE.scope[args[0].name] = args[1].val;
-                return args[1].val;
             }
         },
         get: function (variable) {
@@ -146,7 +146,7 @@
         var token_type;
         if (isNumeric(token) || isString(token)) {
             token_type = TOKEN_TYPE.LITERAL;
-            if(isNumeric(token))
+            if (isNumeric(token))
                 token = parseFloat(token);
         }
         else
@@ -170,7 +170,17 @@
                     var state = newClojure(memory);
                     return evalHelper(interpreter, atom, state);
                 });
-                if (isFunctionCall(evaluated)) {
+                if (evaluated[0].name == "define") {
+                    interpreter.REPL_STATE.scope[evaluated[1].name] = evaluated[2].val;
+                    return evaluated[2].val;
+                }
+                else if (evaluated[0].name == "if") {
+                    if (evaluated[1].val)
+                        return evaluated[2].val;
+                    else
+                        return evaluated[3].val;
+                }
+                else if (isFunctionCall(evaluated)) {
                     return evaluated[0].val(evaluated.slice(1));
                 }
                 else {
