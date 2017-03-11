@@ -1,7 +1,7 @@
 (function () {
     // here so I type less
     var TOKEN_TYPE = {
-        SYMBOL: "symbol",
+        LITERAL: "literal",
         VAR: "variable",
         FUNC: "function"
     };
@@ -145,7 +145,7 @@
     function identify(token) {
         var token_type;
         if (isNumeric(token) || isString(token)) {
-            token_type = TOKEN_TYPE.SYMBOL;
+            token_type = TOKEN_TYPE.LITERAL;
             if(isNumeric(token))
                 token = parseFloat(token);
         }
@@ -198,16 +198,16 @@
             var evalHelper = function (interpreter, node, memory) {
                 if (node instanceof Array) {
                     return {
-                        type: TOKEN_TYPE.SYMBOL,
+                        type: TOKEN_TYPE.LITERAL,
                         val: evalList(interpreter, node, memory)
                     };
                 }
                 else if (node.type == TOKEN_TYPE.VAR) {
                     return evalVar(interpreter, node, memory);
                 }
-                else if (node.type == TOKEN_TYPE.SYMBOL) {
+                else if (node.type == TOKEN_TYPE.LITERAL) {
                     return {
-                        type: TOKEN_TYPE.SYMBOL,
+                        type: TOKEN_TYPE.LITERAL,
                         val: node.val
                     };
                 }
