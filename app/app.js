@@ -3,7 +3,8 @@
     var TOKEN_TYPE = {
         LITERAL: "literal",
         VAR: "variable",
-        FUNC: "function"
+        FUNC: "function",
+        LIST: "list"
     };
     // shouldn't have to repeat get
     var STD_LIB = {
@@ -50,6 +51,10 @@
             },
             ">=": function (args) {
                 return args[0].val >= args[1].val;
+            },
+            define: function(args){
+                this.save(args[0].name, args[1].val);
+                return args[1].val;
             }
         },
         get: function (variable) {
@@ -97,6 +102,9 @@
                     return this.parent.get(variable);
                 else
                     console.log(variable + " is undefined!"); // we should handle errors better one day
+            },
+            save: function(k, v){
+                this.parent.scope[k] = v;
             }
         };
     }
@@ -157,6 +165,22 @@
         };
     }
 
+    function replaceBodyWithVals(body, def, args){
+        var d = def.map(function(e){ return e.val; });
+        if(body instanceof Array){
+            return body.map(function(e){ return replaceBodyWithVals(e, def, args);});
+        }
+        else{
+            if((i = d.indexOf(body.val)) >= 0){
+                return {
+                    type: TOKEN_TYPE.LITERAL,
+                    val: args[i].val
+                };
+            }
+            return body;
+        }
+    }
+
     var interpreter = {
         REPL_STATE: newClojure(STD_LIB),
         interpret: function (line) {
@@ -166,21 +190,27 @@
         },
         eval: function (ast) {
             var evalList = function (interpreter, ast, memory) {
-                var evaluated = ast.map(function (atom) {
-                    var state = newClojure(memory);
-                    return evalHelper(interpreter, atom, state);
-                });
-                if (evaluated[0].name == "define") {
-                    interpreter.REPL_STATE.scope[evaluated[1].name] = evaluated[2].val;
-                    return evaluated[2].val;
+                if(ast[0].val == "defun"){
+                    var funcName = ast[1].val;
+                    var defArgs = ast[2];
+                    var body = ast[3];
+                    memory.save(funcName, function(args){
+                        var replaced = replaceBodyWithVals(body, defArgs, args);
+                        return evalHelper(interpreter, replaced, memory).val;
+                    });
+                    return funcName;
                 }
-                else if (evaluated[0].name == "if") {
-                    if (evaluated[1].val)
-                        return evaluated[2].val;
+                else if(ast[0].val == "if"){
+                    if (evalHelper(interpreter, ast[1], newClojure(memory)).val)
+                        return evalHelper(interpreter, ast[2], newClojure(memory)).val;
                     else
-                        return evaluated[3].val;
+                        return evalHelper(interpreter, ast[3], newClojure(memory)).val;
                 }
-                else if (isFunctionCall(evaluated)) {
+                var evaluated = ast.map(function (atom) {
+                    return evalHelper(interpreter, atom, memory);
+                });
+
+                if (isFunctionCall(evaluated)) {
                     return evaluated[0].val(evaluated.slice(1));
                 }
                 else {
@@ -194,22 +224,25 @@
                 if (variableMeaning instanceof Function)
                     return {
                         type: TOKEN_TYPE.FUNC,
+                        name: node.val,
                         val: function (args) {
-                            return memory.get(node.val).call(interpreter, args);
+                            return memory.get(node.val).call(memory, args);
                         }
                     };
                 else
                     return {
                         type: TOKEN_TYPE.VAR,
                         name: node.val,
+                        node: node,
                         val: memory.get(node.val)
                     };
             };
             var evalHelper = function (interpreter, node, memory) {
                 if (node instanceof Array) {
                     return {
-                        type: TOKEN_TYPE.LITERAL,
-                        val: evalList(interpreter, node, memory)
+                        type: TOKEN_TYPE.LIST,
+                        val: evalList(interpreter, node, memory),
+                        node: node
                     };
                 }
                 else if (node.type == TOKEN_TYPE.VAR) {
@@ -218,7 +251,8 @@
                 else if (node.type == TOKEN_TYPE.LITERAL) {
                     return {
                         type: TOKEN_TYPE.LITERAL,
-                        val: node.val
+                        val: node.val,
+                        node: node
                     };
                 }
                 else
