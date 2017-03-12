@@ -15,6 +15,28 @@
           integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
     <!-- Latest compiled and minified JavaScript -->
 </head>
+<script>
+    // programatically press enter on the element
+    function pressEnter(ele) {
+        var event = new Event("keypress");
+        event.keyCode = 13;
+        ele.dispatchEvent(event);
+    }
+    // programmatically hit the REPL
+    function doLisp(commands) {
+        var lisp = document.getElementById("lisp");
+        var id = setInterval(function () {
+            if (commands.length == 0)
+                clearInterval(id);
+            else {
+                cmd = commands.shift();
+                lisp.value = cmd;
+                pressEnter(lisp);
+            }
+        }, 500);
+
+    }
+</script>
 <body>
 <!--[if lt IE 8]>
 <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade
@@ -22,19 +44,33 @@
 <![endif]-->
 <div class="container">
     <div class="header" id="title">
-        <h1>yet another lisp REPL in js</h1>
+        <h1>try some lisp</h1>
     </div>
     <div class="row">
-
         <form class="form-group" onsubmit="return false">
             <textarea class="form-control" rows="20" id="repl" title=""></textarea>
-            <form class="form-inline" >
+            <form class="form-inline">
                 <div class="input-group">
                     <div class="input-group-addon">&gt</div>
                     <input type="text" class="form-control" id="lisp" placeholder="()">
                 </div>
             </form>
         </form>
+    </div>
+    <div class="row">
+        <h3>here are some examples..</h3>
+        <button type="button" class="btn btn-primary" onclick="
+            doLisp(['( + 1 1 )']);
+        ">1 + 1</button>
+        <button type="button" class="btn btn-primary" onclick="
+            doLisp(['(define x 10)', '(define y 20)', '(- x y )']);
+        ">Variable subtraction</button>
+        <button type="button" class="btn btn-primary" onclick="
+            doLisp(['(if (> 1 0) (first ( 1 2 ) ) ( last ( 1 2 ) ) )']);
+        ">If statement</button>
+        <button type="button" class="btn btn-primary" onclick="
+            doLisp(['(defun Addition (a b) ( + a b ) )', '(Addition 1 1)']);
+        ">Define my own function</button>
     </div>
 </div>
 <script src="app.js"></script>
